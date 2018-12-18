@@ -50,6 +50,8 @@ fp31!(
 
 impl fr_256::Fr256 {
     ///Generate an Fr256 with no bias from `RandomBytesGen`.
+    //CT: Not constant time, but it's based on cryptographically random data
+    //so it should be fine.
     pub fn from_rand_no_bias<R: RandomBytesGen>(random_bytes: &mut R) -> fr_256::Fr256 {
         let mut fr: fr_256::Fr256;
         //We want to generate a value that is in Fr, but we don't want to allow values that
@@ -57,7 +59,7 @@ impl fr_256::Fr256 {
         //which is >= the Fr256 PRIME, throw it away and try again.
         while {
             let bytes: [u8; 32] = random_bytes.random_bytes_32();
-            fr = fr_256::Fr256::from(bytes);
+            fr = fr_256::Fr256::from(bytes); // this mods off the value
             fr.to_bytes_array() != bytes
         } {}
         fr
@@ -85,6 +87,7 @@ impl From<fp_256::Fp256> for fr_256::Fr256 {
 ///
 /// Arguments:
 /// `hex_str` - need to be 63 or 64 bytes. Do not include a leading '0x'
+//CT: Only being used for constants or test values, not constant time.
 pub fn fp256_unsafe_from(hex_str: &str) -> fp_256::Fp256 {
     let even_hex_str = if hex_str.len() % 2 != 0 {
         format!("0{}", hex_str)

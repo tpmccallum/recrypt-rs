@@ -96,6 +96,7 @@ where
     }
 }
 
+//CT: Not constant time. Leaks the u64.
 impl<T> Mul<u64> for Fp12Elem<T>
 where
     T: Copy + Add<Output = T> + Zero + PartialEq,
@@ -160,7 +161,8 @@ where
             elem2: Zero::zero(),
         }
     }
-
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_zero(&self) -> bool {
         *self == Zero::zero()
     }
@@ -183,7 +185,8 @@ where
             elem2: One::one(),
         }
     }
-
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_one(&self) -> bool {
         *self == One::one()
     }
@@ -210,6 +213,7 @@ where
     }
 }
 
+//CT: Not constant time. Leaks the u64.
 impl<T> Pow<u64> for Fp12Elem<T>
 where
     T: ExtensionField,
@@ -307,6 +311,8 @@ impl<T> Fp12Elem<T> {
     }
 }
 
+//CT: Not constant time. Needs to be probably...
+// Maybe use a debug assert and ignore the error condition?
 impl<T> Fp12Elem<T>
 where
     T: PartialEq + Zero + Copy,
@@ -338,6 +344,7 @@ impl Fp12Elem<Fp256> {
     }
 }
 
+//CT: Validation, not constant time
 impl<T> BytesDecoder for Fp12Elem<T>
 where
     T: BytesDecoder + Sized + Copy,

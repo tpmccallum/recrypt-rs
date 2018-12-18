@@ -5,7 +5,8 @@ use gridiron::fp_256::Fp256;
 use quick_error::quick_error;
 use std::convert::From;
 use std::result::Result;
-
+//CT: These implementations are not constant time, but they are validation on the way in
+//Can this be not constant time?
 /// Decode a ByteVector into an implementing type.
 /// Inverse of Hashable.
 pub trait BytesDecoder

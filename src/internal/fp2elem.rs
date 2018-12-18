@@ -20,6 +20,7 @@ pub struct Fp2Elem<T> {
     pub elem2: T,
 }
 
+//COLT: This display is completely useless for pasting values back in (Which is kind of the purpose of debug)
 impl<T> fmt::Debug for Fp2Elem<T>
 where
     T: fmt::Debug,
@@ -29,6 +30,7 @@ where
     }
 }
 
+//COLT: Should this exist
 impl<T> fmt::LowerHex for Fp2Elem<T>
 where
     T: fmt::LowerHex,
@@ -77,6 +79,7 @@ where
     }
 }
 
+//CT: This is not constant time, it leaks the u64 value. We expect u64 values to never be private.
 impl<T> Mul<u64> for Fp2Elem<T>
 where
     T: Mul<u64, Output = T>,
@@ -105,7 +108,7 @@ where
 {
     type Output = Fp2Elem<T>;
     fn div(self, other: Fp2Elem<T>) -> Self {
-        self * other.inv()
+        self / other
     }
 }
 
@@ -136,6 +139,8 @@ where
         }
     }
 
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_zero(&self) -> bool {
         *self == Fp2Elem::zero()
     }
@@ -151,7 +156,8 @@ where
             elem2: T::one(),
         }
     }
-
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_one(&self) -> bool {
         *self == One::one()
     }
@@ -163,7 +169,7 @@ where
 {
     type Output = Fp2Elem<T>;
     fn inv(self) -> Fp2Elem<T> {
-        let mag = self.elem1.pow(2) + self.elem2.pow(2);
+        let mag = self.elem1.pow(2) + self.elem2.pow(2); // CT: pow is not constant time, but the '2' value is known and constant
         Fp2Elem {
             elem1: (-self.elem1 / mag),
             elem2: (self.elem2 / mag),
@@ -171,6 +177,7 @@ where
     }
 }
 
+//CT: Not constant time. Leaks the u64 value.
 impl<T> Pow<u64> for Fp2Elem<T>
 where
     T: Field,
@@ -228,6 +235,7 @@ where
     }
 }
 
+//CT: Validation, not constant time.
 impl<T> BytesDecoder for Fp2Elem<T>
 where
     T: BytesDecoder + Sized,

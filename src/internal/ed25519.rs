@@ -91,6 +91,7 @@ impl SigningKeypair {
     ///Create a SigningKeypair from a sized array of bytes. This can fail if the public key portion doesn't
     ///match the private key.
     ///
+    //CT: Deserialization check that isn't constant time.
     pub fn from_bytes(sized_bytes: &[u8; 64]) -> Result<SigningKeypair, Ed25519Error> {
         let (priv_key, pub_key) = array_split_64(sized_bytes);
         //This can't fail because it's statically guaranteed to be 32 bytes long.
@@ -148,11 +149,13 @@ impl Ed25519Signing for Ed25519 {
     fn sign<T: Hashable>(&self, t: &T, signing_key: &SigningKeypair) -> Ed25519Signature {
         //This unwrap cannot fail. The only thing that the `from_bytes` does for validation is that the
         //value is 64 bytes long, which we guarantee statically.
+        //CT: This does a check to see if the keypair is the right length, it rejects bad values.
         let key_pair = ed25519_dalek::Keypair::from_bytes(&signing_key.bytes[..]).unwrap();
         let sig = key_pair.sign::<Sha512>(&t.to_bytes()[..]);
 
         Ed25519Signature::new(sig.to_bytes())
     }
+    //CT: None of these values are secret, but this isn't constant time. This should be fine.
     fn verify<T: Hashable>(
         &self,
         t: &T,
@@ -164,6 +167,7 @@ impl Ed25519Signing for Ed25519 {
                 ed25519_dalek::Signature::from_bytes(&signature.bytes[..])
                     .and_then(|sig| pk.verify::<Sha512>(&t.to_bytes()[..], &sig))
             })
+            //CT: This isn't constant time. Map will only be called if the value is Some.
             .map(|_| true)
             .unwrap_or(false)
     }

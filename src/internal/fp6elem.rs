@@ -14,6 +14,7 @@ use std::ops::{Add, Div, Mul, Neg, Sub};
 /// FP2Elems. That is, FP6 = FP2[v]/(v^3 - (u + 3)).
 ///
 /// Recall that u is the attached variable for FP2.
+// CT: Eq, and PartialEq aren't constant time.
 #[derive(Clone, PartialEq, Eq, Copy, Default)]
 #[repr(C)]
 pub struct Fp6Elem<T> {
@@ -98,6 +99,7 @@ where
     }
 }
 
+//CT: Not constant time. Leaks the u64.
 impl<T> Mul<u64> for Fp6Elem<T>
 where
     T: Copy + Add<Output = T> + Zero + PartialEq,
@@ -171,6 +173,8 @@ where
         }
     }
 
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_zero(&self) -> bool {
         *self == Zero::zero()
     }
@@ -187,7 +191,8 @@ where
             elem3: One::one(),
         }
     }
-
+//CT: use of this would indicate that an algorithm isn't constant time.
+//Also the comparison is derived which makes no guarentees.
     fn is_one(&self) -> bool {
         *self == One::one()
     }
@@ -237,6 +242,7 @@ where
     }
 }
 
+//CT: Not constant time. Leaks the u64.
 impl<T> Pow<u64> for Fp6Elem<T>
 where
     T: ExtensionField,
@@ -255,11 +261,11 @@ where
         let xi: Fp2Elem<T> = ExtensionField::xi();
 
         let a_prime = Fp2Elem {
-            elem1: self.elem1.elem1 * 2,
+            elem1: self.elem1.elem1 * 2, // CT: reveals only 2, which is constant and known
             elem2: self.elem1.elem2 * 2,
         };
         let a2 = a_prime * self.elem3 + self.elem2.square();
-        let fp22 = self.elem1.square() * xi + self.elem2 * self.elem3 * 2;
+        let fp22 = self.elem1.square() * xi + self.elem2 * self.elem3 * 2; 
         let fp32 = (a_prime * self.elem2) * xi + self.elem3.square();
         Fp6Elem {
             elem1: a2,
@@ -310,6 +316,8 @@ impl<T> Fp6Elem<T> {
     }
 }
 
+//CT: Not constant time. Needs to be probably...
+// Maybe use a debug assert and ignore the error condition?
 impl<T> Fp6Elem<T>
 where
     T: PartialEq + Zero + Copy,
@@ -332,6 +340,7 @@ where
     }
 }
 
+//CT: Validation, not constant time.
 impl<T> BytesDecoder for Fp6Elem<T>
 where
     T: BytesDecoder + Copy,
