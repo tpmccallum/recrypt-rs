@@ -17,6 +17,7 @@ macro_rules! new_from_slice {
         /// construct $t from byte slice. Input slice must be exactly the correct length for the type.
         /// # Returns
         /// Ok($t) or Err($ApiError::InputWrongSize]
+        //CT: Validation.
         pub fn new_from_slice(bytes: &[u8]) -> std::result::Result<$t, ApiErr> {
             if bytes.len() == $t::ENCODED_SIZE_BYTES {
                 let mut dest = [0u8; $t::ENCODED_SIZE_BYTES];

@@ -35,6 +35,7 @@ pub struct HomogeneousPoint<T> {
 }
 
 impl<T: One + Field + From<u32> + Hashable> HomogeneousPoint<T> {
+    //CT: Validation, errors when point isn't on curve.
     pub fn from_x_y((x, y): (T, T)) -> Result<HomogeneousPoint<T>, PointErr> {
         if x.pow(3) + T::from(3) == y.pow(2) {
             Ok(HomogeneousPoint {
@@ -52,6 +53,7 @@ impl<T> PartialEq for HomogeneousPoint<T>
 where
     T: Field,
 {
+    //CT: Not constant time and either should be or should be removed
     fn eq(&self, other: &HomogeneousPoint<T>) -> bool {
         match (*self, *other) {
             (ref p1, ref p2) if p1.is_zero() && p2.is_zero() => true,
@@ -120,7 +122,7 @@ where
             z: Zero::zero(),
         }
     }
-
+    //CT: use of this would indicate that an algorithm isn't constant time.
     fn is_zero(&self) -> bool {
         self.z == Zero::zero()
     }
@@ -131,6 +133,7 @@ where
     T: Field,
 {
     type Output = HomogeneousPoint<T>;
+    //CT: Not constant time, needs to be.
     fn neg(self) -> HomogeneousPoint<T> {
         if self.is_zero() {
             Zero::zero()
@@ -198,6 +201,7 @@ impl<T> HomogeneousPoint<T>
 where
     T: Field,
 {
+    //CT: Not constant time, needs to be.
     ///Add self `multiple` times, where `multiple` is represented by the A, which must be able to be converted into a NAF.
     pub fn times<A: BitRepr>(&self, multiple: &A) -> HomogeneousPoint<T> {
         match self {
@@ -222,6 +226,8 @@ where
     }
 
     ///Divide out by the z we've been carrying around.
+    // CT: Not constant time, needs to be.
+    // Changing this breaks the hashable of some things, I think... Need to verify.
     pub fn normalize(&self) -> Option<(T, T)> {
         if self.is_zero() {
             Option::None
@@ -248,6 +254,7 @@ impl<T> PartialEq for TwistedHPoint<T>
 where
     T: ExtensionField,
 {
+// CT: Not contant time. Is this used anywhere? Tests only?
     fn eq(&self, other: &TwistedHPoint<T>) -> bool {
         match (*self, *other) {
             (ref p1, ref p2) if p1.is_zero() && p2.is_zero() => true,
@@ -317,7 +324,7 @@ where
             z: Zero::zero(),
         }
     }
-
+    //CT: use of this would indicate that an algorithm isn't constant time.
     fn is_zero(&self) -> bool {
         self.z == Zero::zero()
     }
@@ -328,6 +335,7 @@ where
     T: ExtensionField,
 {
     type Output = TwistedHPoint<T>;
+    //CT: Not constant time, needs to be.
     fn neg(self) -> TwistedHPoint<T> {
         if self.is_zero() {
             Zero::zero()
@@ -362,6 +370,7 @@ where
 }
 
 impl<T: Hashable + ExtensionField> Hashable for TwistedHPoint<T> {
+    //CT: Relies on a non CT function. Does the special case on zero point matter?
     fn to_bytes(&self) -> Vec<u8> {
         self.normalize().as_ref().to_bytes()
     }
@@ -372,6 +381,7 @@ impl<T: ExtensionField + BytesDecoder> BytesDecoder for TwistedHPoint<T> {
     const ENCODED_SIZE_BYTES: usize = Fp2Elem::<T>::ENCODED_SIZE_BYTES * 2;
 
     /// Decodes and validates that the resultant TwistedHPoint is on the curve
+    // CT: Validation, checks invalid points ahead of time.
     fn decode(bytes: ByteVector) -> Result<Self, DecodeErr> {
         if bytes.len() == Self::ENCODED_SIZE_BYTES {
             //   3 / (u + 3)
@@ -424,6 +434,7 @@ impl<T> TwistedHPoint<T>
 where
     T: ExtensionField,
 {
+    //CT: Not constant time. Merge with other one, also.
     ///Add self `multiple` times, where `multiple` is represented by the A, which must be able to be converted into a NAF.
     pub fn times<A: BitRepr>(&self, multiple: &A) -> TwistedHPoint<T> {
         match self {
@@ -436,7 +447,7 @@ where
                     naf.reverse();
                     naf.iter().fold(zero(), |res, &cur| {
                         let doubled = res.double();
-                        let result = if cur == 1 { doubled + *self } else { doubled };
+                        let result = if cur == 1 { doubled + *self } else { doubled }; //CT: !!
                         result
                     })
                 }
@@ -444,6 +455,7 @@ where
         }
     }
 
+    //CT: Not constant time.
     ///Divide out by the z we've been carrying around.
     pub fn normalize(&self) -> Option<(Fp2Elem<T>, Fp2Elem<T>)> {
         if self.is_zero() {

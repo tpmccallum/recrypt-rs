@@ -7,6 +7,8 @@ use gridiron::fp_256::Fp256;
 /// Typeclass for converting an implementing type to a stable byte representation
 /// which can be used for hashing (and thus the hash value will also remain consistent)
 /// Inverse of BytesDecoder
+//CT: These implementations aren't constant time. All leak the length of the `to_bytes` when they append and the ones that operate on the collections also
+//leak the length of the collection.
 pub trait Hashable {
     /// Convert self to a stable byte representation.
     fn to_bytes(&self) -> ByteVector;
@@ -17,7 +19,7 @@ impl Hashable for u8 {
         vec![*self]
     }
 }
-
+//CT: Leaks the length of the slice, Also leaks the number of bytes being appended.
 impl<'a, T> Hashable for [&'a T]
 where
     T: Hashable,
@@ -32,6 +34,7 @@ where
     }
 }
 
+//CT: Leaks the length of the vec, Also leaks the number of bytes being appended.
 impl<T> Hashable for Vec<T>
 where
     T: Hashable,

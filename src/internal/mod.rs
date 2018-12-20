@@ -54,12 +54,14 @@ quick_error! {
     }
 }
 
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct PublicKey<T: Field> {
     pub value: HomogeneousPoint<T>,
 }
 
 impl<T: Field + Hashable32> PublicKey<T> {
+    //CT: Not constant time, special for zero point.
     pub fn to_byte_vectors_32(&self) -> Option<([u8; 32], [u8; 32])> {
         self.value
             .normalize()
@@ -72,6 +74,7 @@ impl<T: Field + Hashable32> PublicKey<T> {
 }
 
 impl PublicKey<Fp256> {
+    //CT: Validation.
     pub fn from_x_y_fp256(x: Fp256, y: Fp256) -> ErrorOr<PublicKey<Fp256>> {
         Ok(HomogeneousPoint::from_x_y((x, y)).map(|value| PublicKey { value })?)
     }
@@ -83,6 +86,7 @@ impl<T: Field + Hashable> Hashable for PublicKey<T> {
     }
 }
 
+//CT: PartialEq, Eq not CT
 #[derive(Eq, PartialEq, Copy, Clone, Debug, Default)]
 pub struct PrivateKey<T> {
     pub value: T,
@@ -118,6 +122,7 @@ where
     }
 }
 
+//CT: PartialEq, Eq not CT
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct SignedValue<T> {
     pub public_signing_key: PublicSigningKey,
@@ -133,6 +138,7 @@ impl<T: Hashable> Hashable for SignedValue<T> {
 /// A value included in an encrypted message that can be used when the message is decrypted
 /// to ensure that you got the same value out as the one that was originally encrypted.
 /// It is a hash of the plaintext.
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct AuthHash {
     pub bytes: [u8; 32],
@@ -152,6 +158,7 @@ impl AuthHash {
     }
 }
 
+//CT: PartialEq, Eq not CT
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub enum EncryptedValue<T: Field + Hashable> {
     EncryptedOnce(EncryptedOnceValue<T>),
@@ -166,6 +173,7 @@ pub enum EncryptedValue<T: Field + Hashable> {
 /// encryptedMessage - the encrypted value.
 /// authHash - Authentication hash for the plaintext.
 /// encryptionBlocks - A vector of blocks which describes how to transform the encrypted data to be decrypted by another party.
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ReencryptedValue<T: Field> {
     pub ephemeral_public_key: PublicKey<T>,
@@ -200,6 +208,7 @@ impl<FP: Field + Hashable> ReencryptedValue<FP> {
     }
 }
 
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct ReencryptionBlock<T: Field> {
     pub public_key: PublicKey<T>,
@@ -238,6 +247,7 @@ impl<FP: Field + Hashable> Hashable for ReencryptionBlock<FP> {
 /// `ephemeral_public_key`  - public key of the private key that was used to encrypt
 /// `encrypted_message`     - the encrypted value.
 /// `auth_hash`             - Authentication hash for the plaintext.
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct EncryptedOnceValue<T: Field> {
     pub ephemeral_public_key: PublicKey<T>,
@@ -246,6 +256,7 @@ pub struct EncryptedOnceValue<T: Field> {
 }
 
 impl<T: Field + Hashable> Hashable for EncryptedValue<T> {
+    //CT: Not. Checks to see if it's EncryptedOnce vs Reencrypted.
     fn to_bytes(&self) -> ByteVector {
         match self {
             EncryptedValue::EncryptedOnce(EncryptedOnceValue {
@@ -291,6 +302,7 @@ impl Square for Fr256 {
 }
 
 ///Sum t n times.
+//CT: Not, leaks the u64.
 fn sum_n<T: Add<Output = T> + Copy + Zero + PartialEq>(t: T, n: u64) -> T {
     if n == 0 {
         Zero::zero()
@@ -299,6 +311,7 @@ fn sum_n<T: Add<Output = T> + Copy + Zero + PartialEq>(t: T, n: u64) -> T {
     }
 }
 
+//CT: Not, leaks the u64.
 fn sum_n_loop<T: Add<Output = T> + Copy>(t: T, k: u64, extra: T) -> T {
     if k == 1 {
         t + extra
@@ -308,6 +321,7 @@ fn sum_n_loop<T: Add<Output = T> + Copy>(t: T, k: u64, extra: T) -> T {
     }
 }
 
+//CT: Not, leaks the u64.
 fn pow_for_square<T: One + Mul<T, Output = T> + Copy + Square>(t: T, exp: u64) -> T {
     if exp == 0 {
         T::one()
@@ -457,6 +471,7 @@ where
 /// # Return
 /// ErrorOr[FP12Elem] the decrypted value, which is an element of G_T, or an error (which might be
 /// caused by an authHash comparision failure or a signature validation failure)
+//CT: Validation, Leaks if encrypted once or more times. Doesn't leak on privateKey, which is what we care about.
 pub fn decrypt<T, H: Sha256Hashing, G: Ed25519Signing>(
     private_key: PrivateKey<T>,
     signed_encrypted_value: SignedValue<EncryptedValue<T>>,
@@ -498,7 +513,7 @@ where
         },
     )
 }
-
+//CT: Validation.
 fn compute_and_compare_auth_hash<FP, H: Sha256Hashing>(
     candidate_auth_hash: AuthHash,
     public_key: PublicKey<FP>,
@@ -541,6 +556,7 @@ where
         ephemeral_public_key,
         encrypted_message,
         ..
+        //COLT: Old comment
     } = encrypted_value; //works for now since their is only one case for this enum
 
     //This is because:
@@ -555,6 +571,7 @@ where
 ///
 /// # Return
 ///  decrypted value as FP12 element
+//CT: Leaks the length of reencryption blocks. Doesn't leak private key so it's ok.
 fn decrypt_reencrypted_value<FP, H>(
     private_key: PrivateKey<FP>,
     reencrypted_value: &ReencryptedValue<FP>,
@@ -625,6 +642,7 @@ where
 /// # Return
 /// Some around the payload if the signature was valid, or None otherwise
 ///
+//CT: Validation.
 fn verify_signed_value<T: Hashable + Clone, G: Ed25519Signing>(
     signed_value: SignedValue<T>,
     sign: &G,
@@ -657,7 +675,6 @@ fn verify_signed_value<T: Hashable + Clone, G: Ed25519Signing>(
 /// # Return
 ///  reencryption key, along with an Ed25519 public signing key and Ed25519 signature
 /// @clintfred are there some equations or papers we can reference here?
-///
 pub fn generate_reencryption_key<FP, H, S>(
     from_private_key: PrivateKey<FP>,
     to_public_key: PublicKey<FP>,
@@ -723,6 +740,7 @@ impl From<api::Plaintext> for KValue<Fp256> {
 /// `curve_points`  - IronCore's curve
 /// `sha256`        - Sha256 implementation
 ///
+//CT: Leaks the length of hashable on k_value.
 fn hash2<FP, H>(
     k_value: KValue<FP>,
     curve_points: &CurvePoints<FP>,
@@ -753,6 +771,7 @@ where
 ///                   successive levels of multi-hop transform encryption
 /// `hashed_k`      - a combination of the hash of K and the secret key of the delegator,
 ///                   used to recover `K` from `encrypted_k`
+//CT: PartialEq, Eq not CT
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ReencryptionKey<FP: ExtensionField> {
     pub re_public_key: PublicKey<FP>,
@@ -799,6 +818,7 @@ impl<FP: BitRepr + ExtensionField> ReencryptionKey<FP> {
 /// # Return
 /// Ok(ReencryptedValue) - if the value could be successfully reencrypted
 /// - Err(InvalidEncryptedMessageSignature|ReencryptionKeyIsCorrupt) - if the signatures weren't valid.
+//CT: Validation. Leaks if the value was reencrypted alread or not.
 pub fn reencrypt<FP, S, H>(
     signed_reencryption_key: SignedValue<ReencryptionKey<FP>>,
     signed_encrypted_value: SignedValue<EncryptedValue<FP>>,
@@ -916,6 +936,7 @@ where
  * rand_re_priv_key - A new random private key, which will be used to encrypt the rand_re_temp_key.
  * rand_re_temp_key - A new random integer which is used to ensure that the reencryption block cannot be reused.
  */
+//CT: Leaks the length of the reencryption blocks.
 fn reencrypt_reencrypted_value<FP, H>(
     ReencryptionKey {
         re_public_key,
