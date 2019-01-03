@@ -108,7 +108,7 @@ where
 {
     type Output = Fp2Elem<T>;
     fn div(self, other: Fp2Elem<T>) -> Self {
-        self / other
+        self * other.inv()
     }
 }
 
