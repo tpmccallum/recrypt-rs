@@ -38,6 +38,7 @@ where
     /// Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves" by Beuchat et al,
     /// from 2010.
     pub fn pair(&self, point_p: HomogeneousPoint<T>, point_q: TwistedHPoint<T>) -> Fp12Elem<T> {
+        //CT: Validation: Normalize is not constant time as it reveals if we're at the zero point.
         let (px, py) = point_p
             .normalize()
             .unwrap_or_else(|| panic!("Pairing is undefined on the zero point."));
@@ -45,6 +46,7 @@ where
         let mut f2: Fp2Elem<T> = One::one();
         let neg_q = -point_q;
         let point_result: TwistedHPoint<T> =
+        //CT: Reveals the naf for the loop. This exposes the constant, but nothing else so it should be ok.
             <T as PairingConfig>::naf_for_loop()
                 .iter()
                 .fold(point_q, |acc, naf_value| {
@@ -132,6 +134,7 @@ where
     fn double_line_eval(&self, px: T, py: T, r: TwistedHPoint<T>) -> (Fp12Elem<T>, Fp2Elem<T>) {
         match r {
             TwistedHPoint { x, y, z } => {
+                //CT: Reveals the 3 and 2 for multiplication. Those are constants so it should be fine.
                 let numerator = x.square() * 3;
                 let denominator = y * z * 2;
                 self.finalize_eval(r, px, py, numerator, denominator)
@@ -223,6 +226,7 @@ where
     /// "Faster Squaring in the Cyclomatic Subgroup of Sixth Degree Extensions"
     fn square(fp12: Fp12Elem<T>) -> Fp12Elem<T> {
         let Fp12Elem { elem1: b, elem2: a } = fp12;
+        //CT: Reveals 2 & 2. They're constants so we should be fine.
         let a2 = a * b * 2;
         let b2 = b.square() * 2;
         let Fp6Elem {
@@ -244,11 +248,13 @@ where
     fn frobenius(&self, point: TwistedHPoint<T>) -> TwistedHPoint<T> {
         match point {
             TwistedHPoint { x, y, z } => {
+                //CT: to_fp2 returns an option, which means it's not CT. We could make an unsafe_to_fp2 and using debug asserts?
                 let new_x = (self.pairing_frobenius_factor_1 * x.frobenius())
                     .to_fp2()
                     .unwrap_or_else(|| {
                         panic!("frobenius not defined when the x of `point` can't convert to fp2.")
                     });
+                //CT: to_fp2 returns an option, which means it's not CT. We could make an unsafe_to_fp2 and using debug asserts?
                 let new_y = (self.pairing_frobenius_factor_2 * y.frobenius())
                     .to_fp2()
                     .unwrap_or_else(|| {
@@ -277,6 +283,7 @@ where
 }
 
 impl PairingConfig for Fp256 {
+    //CT: Reveals what we're raisng fp12 to, but since it's a constant it should be ok.
     fn bn_pow(fp12: Fp12Elem<Self>) -> Fp12Elem<Self> {
         //This is a hardcode of the square and multiply for bnPow
         let mut x = fp12;
@@ -291,6 +298,7 @@ impl PairingConfig for Fp256 {
         res * x
     }
     //NAF of 6*BNParam + 2
+    //COLT: This could be an array of fixed size and should be const fn.
     fn naf_for_loop() -> Vec<i8> {
         // if comparing to recrypt-scala, the last two elements were left off manually
         let mut r = vec![

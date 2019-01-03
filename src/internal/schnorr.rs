@@ -13,6 +13,7 @@ use std::marker::PhantomData;
 ///- r is the x coordinate for a point on the elliptic curve.
 ///- s is the signature.
 ///These names are choosen because it's common terminology when working in `EC-Schnorr` algorithms.
+/// CT: PartialEq, Eq
 #[derive(Debug, PartialEq, Eq)]
 pub struct SchnorrSignature<T> {
     r: T,
@@ -70,6 +71,7 @@ where
         message: &A,
         k: FR,
     ) -> Option<SchnorrSignature<FR>> {
+        //CT: normalize isn't constant time. Also we check that x is not zero.  
         (self.g * k).normalize().and_then(|(x, _)| {
             if x.is_zero() {
                 None
@@ -100,13 +102,16 @@ where
             &(&signature.r, &pub_key, message),
             &(&pub_key, message, &signature.r),
         )));
+        //CT: Not constant time. Reveals if there is an augmenting key.
         let augmenting_pub_key = augmenting_key
             .map(|key| self.g * key.value)
             .unwrap_or_else(|| HomogeneousPoint::zero());
         let unaugmented_key = pub_key.value - augmenting_pub_key;
         let v = self.g * signature.s + unaugmented_key * h;
+        //CT: Normalize.
         let normalized = v.normalize();
         normalized
+        //CT: Not constant time. Reveals if the signature matches. I don't think this matters.
             .map(|(x, _)| FR::from(x) == signature.r)
             .unwrap_or_else(|| false)
     }

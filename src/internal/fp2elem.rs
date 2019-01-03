@@ -139,8 +139,8 @@ where
         }
     }
 
-//CT: use of this would indicate that an algorithm isn't constant time.
-//Also the comparison is derived which makes no guarentees.
+    //CT: use of this would indicate that an algorithm isn't constant time.
+    //Also the comparison is derived which makes no guarentees.
     fn is_zero(&self) -> bool {
         *self == Fp2Elem::zero()
     }
@@ -156,8 +156,8 @@ where
             elem2: T::one(),
         }
     }
-//CT: use of this would indicate that an algorithm isn't constant time.
-//Also the comparison is derived which makes no guarentees.
+    //CT: use of this would indicate that an algorithm isn't constant time.
+    //Also the comparison is derived which makes no guarentees.
     fn is_one(&self) -> bool {
         *self == One::one()
     }

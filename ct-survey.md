@@ -2,14 +2,15 @@ Constant Time Survey Notes
 --------------------------
 
 ## What are our goals?
- * identify places in the internal types and algorithms that final/intermediate secret values are vulnerable to timing attacks
 
+* identify places in the internal types and algorithms that final/intermediate secret values are vulnerable to timing attacks
 
 ## What are our ANTI-goals?
- * not concerned with the public API
- * 
+
+* not concerned with the public API
 
 List of files surveyed:
+
 * bitrepr
 * byte_decoder
 * curve - N/A
@@ -19,8 +20,18 @@ List of files surveyed:
 * fp2elem
 * fp6elem
 * fp12elem
-
+* hashable
+* homogeneouspoint
+* macros
+* mod
+* pairing
+* rand_bytes - we should think more about rand number generation
+* schnorr - from implementations should be scrutinized
+* sha256
+* api - oh Lord, validation
+* nonemptyvec - not CT. Is fine?
 
 General Questions
+
 * do validation checks make things not constant time?
 * should we mark functions that aren't constant time in some way?

@@ -254,7 +254,7 @@ impl<T> PartialEq for TwistedHPoint<T>
 where
     T: ExtensionField,
 {
-// CT: Not contant time. Is this used anywhere? Tests only?
+    // CT: Not contant time. Is this used anywhere? Tests only?
     fn eq(&self, other: &TwistedHPoint<T>) -> bool {
         match (*self, *other) {
             (ref p1, ref p2) if p1.is_zero() && p2.is_zero() => true,

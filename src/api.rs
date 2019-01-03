@@ -145,7 +145,7 @@ impl Plaintext {
 }
 
 bytes_only_debug!(Plaintext);
-
+//CT: Definately not ct. We should write a ct version of this probably?
 impl PartialEq for Plaintext {
     fn eq(&self, other: &Plaintext) -> bool {
         self.bytes[..] == other.bytes[..] && self._internal_fp12 == other._internal_fp12
@@ -161,6 +161,7 @@ impl From<Fp12Elem<Fp256>> for Plaintext {
     }
 }
 
+// Needed for Drop
 impl Default for Plaintext {
     fn default() -> Self {
         Plaintext {
@@ -177,7 +178,7 @@ impl Drop for Plaintext {
 }
 impl BytesDecoder for Plaintext {
     const ENCODED_SIZE_BYTES: usize = Fp12Elem::<Fp256>::ENCODED_SIZE_BYTES;
-
+    //CT: Validation.
     fn decode(bytes: ByteVector) -> std::result::Result<Plaintext, DecodeErr> {
         Ok(Plaintext::from(Fp12Elem::decode(bytes)?))
     }
@@ -236,6 +237,7 @@ impl TransformBlock {
         &self.encrypted_random_transform_temp_key
     }
 
+    //CT: Validation
     fn try_from(re_block: internal::ReencryptionBlock<Fp256>) -> Result<Self> {
         Ok(TransformBlock {
             public_key: PublicKey::try_from(&re_block.public_key)?,
@@ -283,6 +285,7 @@ pub enum EncryptedValue {
 }
 
 impl EncryptedValue {
+    //CT: Validation. Also leaks the transform block length.
     fn try_from(
         signed_value: internal::SignedValue<internal::EncryptedValue<Fp256>>,
     ) -> Result<EncryptedValue> {
@@ -340,6 +343,7 @@ impl EncryptedValue {
     ///
     /// This is defined here instead of in the internal api to give more efficient access
     /// to the Public API's PublickKey
+    //CT: Validation and transform block length.
     fn try_into(
         ev: EncryptedValue,
     ) -> std::result::Result<
@@ -444,6 +448,7 @@ impl EncryptedTempKey {
 
 bytes_only_debug!(EncryptedTempKey);
 
+//CT: not ct. Should be?
 impl PartialEq for EncryptedTempKey {
     fn eq(&self, other: &EncryptedTempKey) -> bool {
         self.bytes[..] == other.bytes[..] && self._internal_fp12 == other._internal_fp12
@@ -467,6 +472,7 @@ impl Hashable for HashedValue {
 impl HashedValue {
     const ENCODED_SIZE_BYTES: usize = TwistedHPoint::<Fp256>::ENCODED_SIZE_BYTES;
 
+    //CT: validation
     pub fn new(bytes: [u8; HashedValue::ENCODED_SIZE_BYTES]) -> Result<Self> {
         Ok(
             TwistedHPoint::<Fp256>::decode(bytes.to_vec()).map(|hpoint| HashedValue {
@@ -478,6 +484,7 @@ impl HashedValue {
     pub fn bytes(&self) -> &[u8; HashedValue::ENCODED_SIZE_BYTES] {
         &self.bytes
     }
+        //CT: validation
     pub fn new_from_slice(bytes: &[u8]) -> Result<Self> {
         if bytes.len() == HashedValue::ENCODED_SIZE_BYTES {
             let mut dest = [0u8; HashedValue::ENCODED_SIZE_BYTES];
@@ -493,7 +500,7 @@ impl HashedValue {
 }
 
 bytes_only_debug!(HashedValue);
-
+//CT: not ct. Should be?
 impl PartialEq for HashedValue {
     fn eq(&self, other: &HashedValue) -> bool {
         self.bytes[..] == other.bytes[..] && self._internal_value == other._internal_value
@@ -524,6 +531,7 @@ impl From<TwistedHPoint<Fp256>> for HashedValue {
 /// `to_public_key`         - public key of the delagatee
 /// `encrypted_k`           - random value K, encrypted to the delegatee; used to un-roll successive levels of multi-hop transform encryption
 /// `hashed_k`              - combination of the hash of K and the secret key of the delegator; used to recover K from `encrypted_k`
+//CT: Eq and PartialEq.
 #[derive(Debug, Clone, PartialEq)] //can't derive Copy because of NonEmptyVec
 pub struct TransformKey {
     ephemeral_public_key: PublicKey,
@@ -618,6 +626,7 @@ impl TransformKey {
 
     ///Augment the TransformKey using private_key. If the private_key the TransformKey was delegating from was unaugmented
     ///this can be used to make the TransformKey useful for delegation.
+    //CT: Reveals if the private_key + the transform key hits the zero point.
     pub fn augment(&self, private_key: &PrivateKey) -> Result<TransformKey> {
         let new_internal = self
             ._internal_key

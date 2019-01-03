@@ -173,8 +173,8 @@ where
         }
     }
 
-//CT: use of this would indicate that an algorithm isn't constant time.
-//Also the comparison is derived which makes no guarentees.
+    //CT: use of this would indicate that an algorithm isn't constant time.
+    //Also the comparison is derived which makes no guarentees.
     fn is_zero(&self) -> bool {
         *self == Zero::zero()
     }
@@ -191,8 +191,8 @@ where
             elem3: One::one(),
         }
     }
-//CT: use of this would indicate that an algorithm isn't constant time.
-//Also the comparison is derived which makes no guarentees.
+    //CT: use of this would indicate that an algorithm isn't constant time.
+    //Also the comparison is derived which makes no guarentees.
     fn is_one(&self) -> bool {
         *self == One::one()
     }
@@ -265,7 +265,7 @@ where
             elem2: self.elem1.elem2 * 2,
         };
         let a2 = a_prime * self.elem3 + self.elem2.square();
-        let fp22 = self.elem1.square() * xi + self.elem2 * self.elem3 * 2; 
+        let fp22 = self.elem1.square() * xi + self.elem2 * self.elem3 * 2;
         let fp32 = (a_prime * self.elem2) * xi + self.elem3.square();
         Fp6Elem {
             elem1: a2,
