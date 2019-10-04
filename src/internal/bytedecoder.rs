@@ -4,8 +4,10 @@ use arrayvec::ArrayVec;
 use gridiron::fp_256::Fp256;
 use gridiron::fp_480::Fp480;
 use quick_error::quick_error;
-use std::convert::From;
-use std::result::Result;
+use core::convert::From;
+use core::result::Result;
+use alloc::vec::Vec;
+use alloc::string::String;
 
 /// Decode a ByteVector into an implementing type.
 /// Inverse of Hashable.

@@ -10,6 +10,7 @@ use crate::internal::Square;
 use gridiron::fp_256;
 use gridiron::fp_480;
 use num_traits::{Inv, One, Zero};
+use alloc::vec::Vec;
 
 #[derive(Debug)]
 pub struct Pairing<T> {

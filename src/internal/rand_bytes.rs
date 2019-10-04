@@ -3,9 +3,9 @@ use rand::{CryptoRng, RngCore};
 
 use crate::internal::take_lock;
 use rand::FromEntropy;
-use std::default::Default;
-use std::ops::DerefMut;
-use std::sync::Mutex;
+use core::default::Default;
+use core::ops::DerefMut;
+use core::sync::Mutex;
 
 /// Generation of random bytes for cryptographic operations
 pub trait RandomBytesGen {

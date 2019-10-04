@@ -11,7 +11,7 @@ use recrypt::api_480::CryptoOps as CryptoOps480;
 use recrypt::api_480::Ed25519Ops as Ed25519Ops480;
 use recrypt::api_480::KeyGenOps as KeyGenOps480;
 use recrypt::api_480::Recrypt480;
-use std::cell::RefCell;
+use core::cell::RefCell;
 
 macro_rules! recrypt_bench {
     (api = $api:ident; suite_desc = $suite_desc:ident; bits = $bits:tt) => {

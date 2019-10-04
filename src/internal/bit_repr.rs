@@ -1,6 +1,7 @@
 use crate::internal::fp::fr_256::Fr256;
 use crate::internal::fp::fr_480::Fr480;
 use gridiron::digits::constant_bool::ConstantBool;
+use alloc::vec::Vec;
 
 /// A bit representation of a numeric value
 pub trait BitRepr {

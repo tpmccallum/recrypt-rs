@@ -36,7 +36,7 @@ quick_error! {
 }
 
 pub type DefaultRng = ReseedingRng<rand_chacha::ChaChaCore, EntropyRng>;
-pub type Result<T> = std::result::Result<T, RecryptErr>;
+pub type Result<T> = core::result::Result<T, RecryptErr>;
 
 impl From<internal::InternalError> for RecryptErr {
     fn from(err: internal::InternalError) -> Self {

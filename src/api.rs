@@ -27,9 +27,10 @@ use rand::rngs::adapter::ReseedingRng;
 use rand::rngs::EntropyRng;
 use rand::FromEntropy;
 use rand_chacha;
-use std;
-use std::fmt;
-use std::ops::{Add, Sub};
+use core;
+use core::fmt;
+use core::ops::{Add, Sub};
+use alloc::vec::Vec;
 
 /// Recrypt public API - 256-bit
 #[derive(Debug)]
@@ -172,7 +173,7 @@ impl Drop for Plaintext {
 impl BytesDecoder for Plaintext {
     const ENCODED_SIZE_BYTES: usize = Fp12Elem::<Monty256>::ENCODED_SIZE_BYTES;
 
-    fn decode(bytes: ByteVector) -> std::result::Result<Plaintext, DecodeErr> {
+    fn decode(bytes: ByteVector) -> core::result::Result<Plaintext, DecodeErr> {
         Ok(Plaintext::from(Fp12Elem::decode(bytes)?))
     }
 }
@@ -345,7 +346,7 @@ impl EncryptedValue {
     /// to the Public API's PublickKey
     fn try_into(
         ev: EncryptedValue,
-    ) -> std::result::Result<
+    ) -> core::result::Result<
         internal::SignedValue<internal::EncryptedValue<Monty256>>,
         internal::bytedecoder::DecodeErr,
     > {
@@ -1155,7 +1156,7 @@ pub(crate) mod test {
     pub(crate) struct DummyRandomBytes;
     impl RandomBytesGen for DummyRandomBytes {
         fn random_bytes_32(&self) -> [u8; 32] {
-            [std::u8::MAX; 32]
+            [core::u8::MAX; 32]
         }
 
         fn random_bytes_60(&self) -> [u8; 60] {
@@ -1427,7 +1428,7 @@ pub(crate) mod test {
         assert_ne!(private_key_result.bytes(), result.bytes());
     }
 
-    use std::default::Default;
+    use core::default::Default;
     #[test]
     fn transform_to_same_key() {
         let api = api_with(Some(RandomBytes::default()), DummyEd25519);

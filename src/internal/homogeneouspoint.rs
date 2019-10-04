@@ -12,8 +12,9 @@ use num_traits::zero;
 use num_traits::Inv;
 use num_traits::Pow;
 use quick_error::quick_error;
-use std::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
-use std::option::Option;
+use core::ops::{Add, AddAssign, Mul, Neg, Sub, SubAssign};
+use core::option::Option;
+use alloc::vec::Vec;
 
 quick_error! {
     #[derive(Clone, Debug, PartialEq, Eq)]

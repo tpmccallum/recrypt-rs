@@ -8,8 +8,10 @@ use core::fmt;
 use gridiron::digits::constant_bool::ConstantBool;
 use gridiron::digits::constant_time_primitives::ConstantSwap;
 use num_traits::{Inv, One, Pow, Zero};
-use std::ops::{Add, Div, Mul, Neg, Sub};
-use std::result::Result;
+use core::ops::{Add, Div, Mul, Neg, Sub};
+use core::result::Result;
+use alloc::vec::Vec;
+
 
 /// This is the degree 2 extension of the base field FP. It is formed by attaching the variable to
 /// Fp, subject to the constraint u^2 + 1 = 0. That is, FP2 = Fp[u]/(u^2 + 1)

@@ -9,7 +9,8 @@ use core::fmt;
 use gridiron::fp_256::Monty as Monty256;
 use gridiron::fp_480::Monty as Monty480;
 use num_traits::{Inv, One, Pow, Zero};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use core::ops::{Add, Div, Mul, Neg, Sub};
+use alloc::vec::Vec;
 
 /// An element of the degree 12 extension of our base finite field Fp. The degree 12 extension is formed on
 /// the degree six extension using the substitution w^2 = v. That is, FP12 = FP6[w]/(w^2 - v)

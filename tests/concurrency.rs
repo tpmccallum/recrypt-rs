@@ -1,8 +1,8 @@
 use rand::FromEntropy;
 use rand_chacha;
 use recrypt::prelude::*;
-use std::sync::Arc;
-use std::thread;
+use core::sync::Arc;
+use core::thread;
 #[test]
 fn generate_plaintexts() {
     let recrypt = Arc::new(Recrypt::new_with_rand(

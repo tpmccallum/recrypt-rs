@@ -8,9 +8,9 @@ use ed25519_dalek;
 use ed25519_dalek::PublicKey;
 use quick_error::quick_error;
 use rand;
-use std;
-use std::fmt;
-use std::sync::Mutex;
+use core;
+use core::fmt;
+use core::sync::Mutex;
 
 // CompressedY version of the PublicSigningKey
 new_bytes_type!(PublicSigningKey, 32);

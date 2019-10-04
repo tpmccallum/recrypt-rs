@@ -11,7 +11,7 @@ use crate::internal::{field, PrivateKey, PublicKey};
 use gridiron::digits::constant_time_primitives::ConstantSwap;
 use gridiron::fp_256::Monty as Monty256;
 use gridiron::fp_480::Monty as Monty480;
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 /// `r` - the x coordinate for a point on the elliptic curve.
 /// `s` - the signature.

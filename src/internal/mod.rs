@@ -24,7 +24,7 @@ use gridiron::fp_480::Fp480;
 use log::error;
 use num_traits::{One, Zero};
 use quick_error::quick_error;
-use std::ops::{Add, Mul, Neg, Sub};
+use core::ops::{Add, Mul, Neg, Sub};
 #[macro_use]
 pub mod macros;
 pub mod bit_repr;
@@ -45,7 +45,8 @@ pub mod sha256;
 
 use crate::api;
 use crate::api_480;
-use std::sync::{Mutex, MutexGuard};
+use core::sync::{Mutex, MutexGuard};
+use alloc::vec::Vec;
 
 pub type ByteVector = Vec<u8>;
 pub type ErrorOr<T> = Result<T, InternalError>;

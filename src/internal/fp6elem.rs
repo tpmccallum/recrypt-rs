@@ -6,7 +6,8 @@ use crate::internal::ByteVector;
 use crate::internal::{pow_for_square, sum_n, Square};
 use core::fmt;
 use num_traits::{Inv, One, Pow, Zero};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use core::ops::{Add, Div, Mul, Neg, Sub};
+use alloc::vec::Vec;
 
 /// This is the degree 6 extension of the base field, which is formed on top of the degree 2 extension
 /// using the variable substitution v^3 = u + 3. That factor, u + 3, is also referred to as Xi.

@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use quick_error::quick_error;
 
 /// A simple-minded NonEmptyVec implementation
@@ -6,6 +7,7 @@ pub struct NonEmptyVec<T> {
     first: T,
     rest: Vec<T>,
 }
+
 quick_error! {
     #[derive(Debug)]
     pub enum NonEmptyVecError {

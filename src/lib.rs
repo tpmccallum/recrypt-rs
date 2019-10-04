@@ -1,5 +1,6 @@
 #![cfg_attr(feature = "unstable", feature(test))]
 #![doc(html_no_source)] // use github for source browsing
+#![cfg_attr(not(test),no_std)]
 
 //! Recrypt implements a set of cryptographic primitives for building a
 //! multi-hop proxy re-encryption scheme, known as Transform Encryption.
@@ -84,6 +85,9 @@
 //! The public API is also constant time, except for equality. In the future we might implement
 //! constant time `PartialEq`, but until then secret API values (`Plaintext`, `PrivateKey`, `DerivedSymmetricKey`)
 //! have equality only when wrapped in the `Revealed` type.
+
+#[macro_use]
+extern crate alloc;
 
 pub mod prelude;
 #[macro_use] // this is still required in Rust 2018

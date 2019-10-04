@@ -7,7 +7,7 @@ use gridiron::fp_256;
 use gridiron::fp_480;
 use num_traits::{Inv, Pow};
 use num_traits::{One, Zero};
-use std::ops::{Add, Div, Mul, Neg, Sub};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 
 #[cfg(test)]
 macro_rules! field_props {
