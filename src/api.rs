@@ -1029,6 +1029,11 @@ impl PublicKey {
         let new_point = self._internal_key.value + other._internal_key.value;
         PublicKey::try_from(&internal::PublicKey::new(new_point))
     }
+
+    pub fn augment_minus(&self, other: &PublicKey) -> Result<PublicKey> {
+        let new_point = self._internal_key.value - other._internal_key.value;
+        PublicKey::try_from(&internal::PublicKey::new(new_point))
+    }
 }
 
 impl PartialEq for PublicKey {
@@ -1633,5 +1638,110 @@ pub(crate) mod test {
         let fp12_one = gen_random_fp12(&recrypt.pairing, &recrypt.random_bytes);
         let fp12_two = gen_random_fp12(&recrypt.pairing, &recrypt.random_bytes);
         assert_ne!(fp12_one, fp12_two);
+    }
+
+    //Following 2 tests have the same client_generated_priv, aug and different server_priv
+    // client_generated_priv Ok([7, 46, 76, 44, 6, 74, 168, 157, 239, 100, 111, 47, 185, 198, 167, 26, 19, 160, 67, 111, 84, 86, 153, 224, 18, 229, 179, 113, 244, 250, 181, 150])
+    // aug Ok([76, 230, 130, 128, 32, 88, 38, 137, 156, 128, 168, 207, 116, 14, 135, 198, 67, 206, 195, 104, 172, 227, 28, 138, 122, 212, 106, 142, 238, 35, 7, 203])
+    #[test]
+    fn schnorr_with_aug() {
+        let recrypt = Recrypt::new();
+        let client_generated_priv = PrivateKey::new([
+            7, 46, 76, 44, 6, 74, 168, 157, 239, 100, 111, 47, 185, 198, 167, 26, 19, 160, 67, 111,
+            84, 86, 153, 224, 18, 229, 179, 113, 244, 250, 181, 150,
+        ]);
+        let client_generated_pub = recrypt.compute_public_key(&client_generated_priv).unwrap();
+        let aug = PrivateKey::new([
+            76, 230, 130, 128, 32, 88, 38, 137, 156, 128, 168, 207, 116, 14, 135, 198, 67, 206,
+            195, 104, 172, 227, 28, 138, 122, 212, 106, 142, 238, 35, 7, 203,
+        ]);
+        let initial_server_priv = PrivateKey::new([
+            93, 230, 130, 128, 32, 88, 38, 137, 156, 128, 168, 207, 116, 14, 135, 198, 67, 206,
+            195, 104, 172, 227, 28, 138, 122, 212, 106, 142, 238, 35, 7, 205,
+        ]);
+        dbg!(aug.clone() + initial_server_priv.clone());
+
+        assert_eq!(
+            client_generated_priv.clone() - aug.clone() + initial_server_priv.clone() + aug.clone(),
+            client_generated_priv.clone() + initial_server_priv.clone()
+        );
+
+        let server_pub_key = recrypt.compute_public_key(&initial_server_priv).unwrap();
+        let augmented_pub_key = client_generated_pub.augment(&server_pub_key).unwrap();
+        let message: u8 = 100u8;
+        let client_augmented_priv = client_generated_priv.clone() - aug.clone();
+        let final_server_partial_priv = initial_server_priv + aug.clone();
+        assert_eq!(
+            recrypt
+                .compute_public_key(&client_augmented_priv.clone())
+                .unwrap()
+                .augment(
+                    &recrypt
+                        .compute_public_key(&final_server_partial_priv)
+                        .unwrap()
+                )
+                .unwrap(),
+            augmented_pub_key
+        );
+        let schnorr_sign_result =
+            recrypt.schnorr_sign(&client_augmented_priv, &augmented_pub_key, &message);
+
+        assert!(recrypt.schnorr_verify(
+            &augmented_pub_key,
+            Some(&final_server_partial_priv),
+            &message,
+            schnorr_sign_result
+        ));
+    }
+
+    #[test]
+    fn schnorr_with_aug_with_bad() {
+        let recrypt = Recrypt::new();
+        let client_generated_priv = PrivateKey::new([
+            7, 46, 76, 44, 6, 74, 168, 157, 239, 100, 111, 47, 185, 198, 167, 26, 19, 160, 67, 111,
+            84, 86, 153, 224, 18, 229, 179, 113, 244, 250, 181, 150,
+        ]);
+        let client_generated_pub = recrypt.compute_public_key(&client_generated_priv).unwrap();
+        let aug = PrivateKey::new([
+            76, 230, 130, 128, 32, 88, 38, 137, 156, 128, 168, 207, 116, 14, 135, 198, 67, 206,
+            195, 104, 172, 227, 28, 138, 122, 212, 106, 142, 238, 35, 7, 203,
+        ]);
+        let initial_server_priv = PrivateKey::new([
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 2,
+        ]);
+        dbg!(aug.clone() + initial_server_priv.clone());
+
+        assert_eq!(
+            client_generated_priv.clone() - aug.clone() + initial_server_priv.clone() + aug.clone(),
+            client_generated_priv.clone() + initial_server_priv.clone()
+        );
+
+        let server_pub_key = recrypt.compute_public_key(&initial_server_priv).unwrap();
+        let augmented_pub_key = client_generated_pub.augment(&server_pub_key).unwrap();
+        let message: u8 = 100u8;
+        let client_augmented_priv = client_generated_priv.clone() - aug.clone();
+        let final_server_partial_priv = initial_server_priv + aug.clone();
+        assert_eq!(
+            recrypt
+                .compute_public_key(&client_augmented_priv.clone())
+                .unwrap()
+                .augment(
+                    &recrypt
+                        .compute_public_key(&final_server_partial_priv)
+                        .unwrap()
+                )
+                .unwrap(),
+            augmented_pub_key
+        );
+        let schnorr_sign_result =
+            recrypt.schnorr_sign(&client_augmented_priv, &augmented_pub_key, &message);
+
+        assert!(recrypt.schnorr_verify(
+            &augmented_pub_key,
+            Some(&final_server_partial_priv),
+            &message,
+            schnorr_sign_result
+        ));
     }
 }
